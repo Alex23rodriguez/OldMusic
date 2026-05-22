@@ -1,6 +1,8 @@
+// Sliders
 var s1;
 var s2;
 
+// Game state
 var ans = "";
 var notes = [];
 var next = 190;
@@ -10,6 +12,10 @@ var best = 0;
 
 var sounds = [];
 var imgs = [];
+
+// UI constants
+const ANSWER_BAR_X = 160;
+const KEY_SPACE = 32;
 
 function setup() {
   s1 = createSlider(50, 500, 200, 5);
@@ -35,18 +41,11 @@ function draw() {
   text("Speed", 830, 23);
   text(ans, 70, 700);
 
-  for (var i = 0; i < 5; i++) {
-    line(0, 150 + i * 50, width, 150 + i * 50);
-  }
+  drawTrebleStaff();
+  drawBassClefStaff();
+  line(ANSWER_BAR_X, STAFF_TOP_Y, ANSWER_BAR_X, staffTopY(1) + (LINES_PER_STAFF - 1) * LINE_SPACING);
 
-  for (var i = 6; i < 11; i++) {
-    line(0, 150 + i * 50, width, 150 + i * 50);
-  }
-
-  line(160, 150, 160, 650);
-
-  if (notes.length > 0 && notes[0].xx <= 160) {
-    //print(notes[0].ans)
+  if (notes.length > 0 && notes[0].xx <= ANSWER_BAR_X) {
     ans = ansToNote(notes[0].ans);
     notes = notes.slice(1);
     if (best < streak) {
@@ -56,52 +55,14 @@ function draw() {
   }
 
   for (var i = 0; i < notes.length; i++) {
-    if (
-      notes[i].n == 14 ||
-      notes[i].n == 2 ||
-      notes[i].n == 26 ||
-      notes[i].n == 0 ||
-      notes[i].n == 28
-    ) {
-      //lines for notes outside of grid
-      line(
-        notes[i].xx - 40,
-        notes[i].n * 25 + 50,
-        notes[i].xx + 40,
-        notes[i].n * 25 + 50,
-      );
-    }
-    if (notes[i].n == 0 || notes[i].n == 1) {
-      line(notes[i].xx - 40, 100, notes[i].xx + 40, 100);
-    }
-    if (notes[i].n == 28 || notes[i].n == 27) {
-      line(notes[i].xx - 40, 26 * 25 + 50, notes[i].xx + 40, 26 * 25 + 50);
-    }
-
-    if (i == 0) {
-      fill(random(255), random(255), random(255));
-    } else {
-      fill(0);
-    }
-
-    strokeWeight(4);
-
-    if ((notes[i].n <= 14 && notes[i].n >= 9) || notes[i].n >= 20) {
-      line(notes[i].xx + 25, notes[i].yy, notes[i].xx + 25, notes[i].yy - 174);
-    } else {
-      line(notes[i].xx - 25, notes[i].yy, notes[i].xx - 25, notes[i].yy + 174);
-    }
-    ellipse(notes[i].xx, notes[i].yy, 50, 42);
-
-    strokeWeight(2);
-
+    drawNote(notes[i], i == 0);
     notes[i].xx -= speed;
   }
 
   next++;
   if (next >= tempo) {
     next = 0;
-    notes.push(new note(floor(random(29))));
+    notes.push(new Note(floor(random(NOTE_RANGE)) + NOTE_MIN, floor(random(2))));
   }
   fill(0);
   textSize(30);
@@ -115,9 +76,9 @@ function draw() {
 }
 
 function keyPressed() {
-  if (keyCode == 32) {
-    notes.push(new note(floor(random(29))));
-  } else if (keyCode == notes[0].ans) {
+  if (keyCode == KEY_SPACE) {
+    notes.push(new Note(floor(random(NOTE_RANGE)) + NOTE_MIN, floor(random(2))));
+  } else if (notes.length > 0 && keyCode == notes[0].ans) {
     ans = "";
 
     notes = notes.slice(1);
@@ -129,20 +90,4 @@ function keyPressed() {
     }
     streak = 0;
   }
-}
-
-function note(n) {
-  this.n = n;
-  this.xx = width;
-  this.yy = 50 + n * 25;
-
-  this.ans = getAns(n);
-}
-
-function getAns(n) {
-  return [67, 66, 65, 71, 70, 69, 68][n % 7]; // c, b, a, g, f, e, d
-}
-
-function ansToNote(n) {
-  return ["La", "Si", "Do", "Re", "Mi", "Fa", "Sol"][n - 65];
 }
